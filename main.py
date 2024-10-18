@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import os
 from tkinter.messagebox import showerror
-from  numpy import sort, cos, sin
 from pandas import read_csv as pd
 from matplotlib.widgets import TextBox, Button, RadioButtons
 
@@ -10,67 +9,68 @@ fig, ax = plt.subplots()
 fig.subplots_adjust(right=0.85, left= 0.1)
 axbox = fig.add_axes([0.1, 0.02, 0.2, 0.04])
 axbutton = fig.add_axes([0.82, 0.02, 0.1, 0.04])
-axradio1 = fig.add_axes([0.87, 0.5, 0.09, 0.1])
-axradio2 = fig.add_axes([0.87, 0.65, 0.09, 0.1])
+axradioMode = fig.add_axes([0.87, 0.65, 0.09, 0.1])
 
 # основы графика
 x = [0,1]
 y = [1,0]
 l = ax.scatter(x,y)
+ax.grid()
 mode = 0
+
 # экземпляры элементов интерфейса
 text = TextBox(axbox, 'csv-file',textalignment="center")
 button = Button(axbutton, 'clear')
-radio = RadioButtons(axradio1, ('standart','cos(x)', 'sin(x)'))
-radio2 = RadioButtons(axradio2, ('one','a lot'))
+radioB_mode = RadioButtons(axradioMode, ('one','a lot'))
 
 # класс графика
 class Graph:
-    global x
-    global y
+    def __init__(self) -> None:
+        self.x = []
+        self.y = []
     # метод draw рисует график
     def draw(self, x, y):
         self.x = x
         self.y = y
-        self.x = sort(self.x)
+        self.sort(x,y)
         ax.scatter(self.x,self.y)
-        fig.canvas.draw()
+        ax.grid()
         plt.draw()
-
-graph = Graph() # экземпляр класса графика
+    def sort(self, x,y):
+        l = []
+        for i in range(len(x)):
+            l.append((x[i],y[i]))
+        l.sort(key=lambda x: x)
+        X = []
+        Y = []
+        for item in l:
+            X.append(item[0])
+            Y.append(item[1])
+        return X,Y
 
 # класс для работы с интерфейсом 
 class InterFace:
-    f = 0 # сюда помещается файлик csv
+    def __init__(self) -> None:
+        self.graph = Graph() # экземпляр класса графика
+        self.f = 0 # сюда помещается файлик csv
 
     # очищает график от всего
     def clear(self, event):
-        radio.clear()
         ax.cla()
         plt.draw()
-    
-    def funcRadio(self, label):
+        
+
+    def RadioB_Mode(self, label):
         global mode
-        if mode == 0:
-            ax.cla()
-        var = {'cos(x)': cos(self.f['x']), 'sin(x)': sin(self.f['x'])}
-        if label != 'standart':
-            graph.draw(self.f['x'], var[label])
-            return
-        graph.draw(self.f['x'], self.f['y'])
-    def funcRadio2(self, label):
-        global mode
-        ax.cla()
         if label == 'one':
             mode = 0
         else:
             mode = 1
-        
 
     # загружает и выводит на экран график из файла
     def sumbit(self, expression):
         global mode
-        radio.clear()
+        ax.grid()
         ext = os.path.splitext(expression)[-1]
         if ext == ".csv":
             try:
@@ -80,8 +80,11 @@ class InterFace:
             else:
                 if mode == 0:
                     ax.cla()
-                graph.draw(self.f['x'], self.f['y'])
+                # сортировка точек от меньшего к большему по оси X 
+                x = self.f['x']
+                y = self.f['y']
                 
+                self.graph.draw(x, y)  
         else:
             showerror('Ошибка', 'Не правильное расширение файла')
 
@@ -90,6 +93,5 @@ inter = InterFace() # экземпляр логики интерфейса
 #соединение интерфейса с логикой его работы
 text.on_submit(inter.sumbit)
 button.on_clicked(inter.clear)
-radio.on_clicked(inter.funcRadio)
-radio2.on_clicked(inter.funcRadio2)
+radioB_mode.on_clicked(inter.RadioB_Mode)
 plt.show()
